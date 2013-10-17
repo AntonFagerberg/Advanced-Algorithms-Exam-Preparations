@@ -1,5 +1,5 @@
 \documentclass{proc}
-\title{\sf EDAN55 Kurssammanfattning}
+\title{\sf Advanced Algorithms Exam Preparations}
 \usepackage{mdframed}
 
 \begin{document}
@@ -181,7 +181,7 @@ The greedy algorithm finds a solution within a factor $O(log(d*)$ of the optimal
 
 It has been shown that no polynomial-time approximation algorithm can achieve an approximation bound much better than $H(n)$, unless P = NP. 
 
-\section{The Pricing Method: Vertex Cover}
+\section{Vertex Cover - The Pricing Method}
 
 Vertex cover in a graph $G = (V,E)$ is a set $S \subseteq V$ so that each edge has at least one end in S. In this version of the problem, each vertex $i \in V$ has a weight $w_i \ge 0$, with the weight of a set $S$ of vertices denoted $w(S) = \sum_{i \in S} w_i$. 
 
@@ -199,6 +199,96 @@ If we had a polynomial-time algorithm that solves the Set Cover Proble, then we 
 
 \begin{mdframed}
     \textbf{(11.12)} The Set Cover approximation algorithm can be used to give an $H(d)$-approximation algorithm for the weight Vertex Cover Problem, where d is the maximum degree of the graph. (The degree of the graph is the maximum number edges attached to a vertex).
+    
+    \textbf{Proof.} Proof is based on the reduction Vertex Cover $\leq_P $ Set Cover, which also extends to the weighted case. Consider an instance of the weighted Vertex Cover Problem, specified by a graph $G = (V,E)$. We define an instance of Set Cover as follows: the underlying set U is equal to E. For each node $i$, we define a set $S_i$ cosisting of all edges incident to node $i$ and give this set weight $w_i$. Collections of sets that cover U now correspond precisely to vertex cover. Note that the maximum size of any $S_i$ is precisely the maximum degree $d$.
+    
+    We can therefore use the approximation algorithm for Set Cover to find a vertex cover whose weight is within a factor of $H(d)$ of minimum.
 \end{mdframed}
+
+The $H(d)$ approximation is good when $d$ is small but it gets worse as $d$ gets larger, approaching a bound that is logarithmic in the number of vertices.
+
+\begin{mdframed}
+    It is not the case that every polynomial-time reduction leads to a comparable implication for approximation algorithms. It is proved that Independent Set $\leq_P$ Vertex Cover but we can't use an approximation algorithm for minimum-size vertex to design a comparably good approximation algorithm for the maximum-size independent set. See example p. 619.
+\end{mdframed}
+
+\textbf{The Pricing Method to Minimize Cost} is also known as the primal-dual method. Think of the weights on the nodes as costs and each edge as having to pay for its "share" of the cost of the vertex cover we find. The greedy set cover can be seen as a pricing algorithm where $c_s$ is the cost the algorithm paid for covering the element $s$. The key to proving that the algorithm was an $H(d*)$-approximation algorithm was a certain approximate "fairness" property for the cost-shares. (11.10) shows that the elements in a set $S_k$ are charged by at most an $H(|S_k|)$ factor more than the cost of covering them by the set $S_k$.
+
+In this new algorithm, the weight $w_i$ of the vertex $i$ is seen as the cost for using $i$ in the cover. We will think of each edge $e$ as a separate "agent" who is willing to "pay" something to the node that covers it. The algorithm will not only find a vertex cover $S$ but also determine prices $p_e \ge 0$ for each edge $e \in E$ so that if each edge $e \in E$ pays the price $p_e$, this will in total approximately cover the cost of S. The prices $p_e$ are analogues of $c_s$ from the Set Cover Algorithm.
+
+We call prices $p_e$ fair if for each vertex $i$, the edges adjacent to $i$ do not have to pay more than the cost of the vertex: $\sum_{e=(i,j)} p_e \le w_i$. Fair prices provide a lower bound on the cost of any solution.
+
+\begin{mdframed}
+    \textbf{(11.13)} For any vertex cover $S*$, and any nonnegative and fair prices $p_e$, we have $\sum_{e \in E} p_e \le w(S*)$.
+    
+    \textbf{Proof.} Consider a vertex cover S*. By the definition of fairness, we have $\sum_{e=(i,j)} p_e \le w_i$ for all nodes $i \in S*$.Adding these inequalitities over all nodes in S*, we get
+    
+    $\sum_{i \in S*} \sum_{e=(i,j)} p_e \le \sum_{i \in S*} w_i = w(S*)$.
+    
+    Since $S*$ is a vertex cover, each edge $e$ conributes at least one term $p_e$ to the left-hand side. It may contribute more than one copy of $p_e$ to this sum since it may be covered from both ends by $S*$; but the prices are nonnegative and so the sum on the left-hand side is at least as large as the sum of all prices $p_e$:
+
+    $\sum_{e \in E} p_e \le \sum_{i \in S*} \sum_{e=(i,j)} p_e$.
+    
+    \noindent Combining this with previous inequality:
+    
+    $\sum_{e \in E} p_e \le w(S*)$.
+\end{mdframed}
+
+A node $i$ is \textit{tight} (or "paid for") if $\sum_{e=(i,j)} p_e = w_i$.
+
+\begin{mdframed}
+    \textbf{Algorithm:} (Vertex-Cover-Approximation)
+    
+    Set $p_e = 0$ for all $e \in E$
+    
+    While exists edge $(i,j)$, neither $i$ nor $j$ is tight
+
+    \hspace{2ex} Select edge $e = (i,j)$
+
+    \hspace{2ex} Increase $p_e$ without violating fairness
+    
+    EndWhile
+    
+    Return $S$ = set of all tight nodes
+\end{mdframed}
+
+\begin{mdframed}
+    \textbf{(11.14)} The set $S$ and the prices $p$ resturned by the algorithm satisfy the inequality $w(S) \le 2 \sum_{e \in E} p_e$.
+    
+    \textbf{Proof.} All nodes in $S$ are tight, so we have $\sum_{e=(i,j)} p_e = w_i$ for all $i \in S$. Adding over all nodes in $S$ we get
+    
+    $w(S) = \sum_{i \in S} w_i = \sum_{i \in S} \sum_{e=(i,j)} p_e$.
+    
+    An edge $e=(i,j)$ can be included in the sum on the right-hand side at most twice (if both $i$ and $j$ are in $S$), and so we get
+    
+    $w(s) = \sum_{i \in S} \sum_{e=(i,j)} p_e \le 2 \sum_{e \in E} p_e$.
+\end{mdframed}
+
+\begin{mdframed}
+    \textbf{(11.15)} The set $S$ returned by the algorithm is a vertex cover, and its cost is at most twice the minimum cost of any vertex cover.
+    
+    \textbf{Proof.} S is indeed a vertex cover. If $S$ would not cover the edge $e=(i,j)$, neither $i$ nor $j$ would be tight and so the while loop should not have ended.
+    
+    Let $p$ be the prices set by the algorithm and let $S*$ be an optimal vertex cover. By (11.14) we have $2 \sum_{e \in E} p_e \ge w(S)$, and by (11.13) we have $\sum_{e \in E} p_e \le w(S*)$.
+    
+    The sum of the edge prices is a lower bound on the weight of any vertex cover, and twice the sum of the edge prices is an upper bound on the weight of our vertex cover:
+    
+    $w(s) \le 2 \sum_{e \in E} p_e \le 2w(S*)$.
+\end{mdframed}
+
+\section{The Knapsack Problem - PTAS}
+Polynomial-time algorithm has very strong approximation. Consider a more general version of the Knapsack (or Subset Sum). 
+
+\begin{mdframed}
+    Suppose you have $n$ items that you consider packing in a knapsack. Each item $i = 1, \ldots, n$ has two integer parameters, a weight $w_i$ and a value $v_i$. Given a knapsack capacity $W$, the goal of the Knapsack Problem is to finda subset $S$ of items of maximum value subject to the restriction that the total weight of the set should not exceed $W$. In other words, maximize $\sum_{i \in S} v_i$ subject to the condition $\sum_{i \in S} w_i \le W$.
+    
+    Extra parameter $\epsilon$ which is the desired precision. The approximation will find a subset $S$ whose total weight does not exceed $W$, with value $\sum_{i \in S} v_i$ at most a $(1 + \epsilon)$ factor below the maximum possible. 
+    The algorithm will run in polyomial time for any fixed choice of $\epsilon > 0$. The dependence on $\epsilon$ will not be polynomial. This type algorithm is called a \textit{polynomial-time approximation scheme}.
+\end{mdframed}
+
+The problem with finding a polyonmial time solution is that as the fixed choice of $\epsilon$ get smaller and smaller, the running time gets larger and larger. When $\epsilon$ is small enough to make sure we get the optimum value, it is no longer a polynomial-time algorithm.
+
+In the special case where $v_i = w_i$, there is a dynamic programming algorithm which runs in $O(nW)$. Other variations such as where $v* = max_i v_i$ which has runnning time $O(n^2 v*)$ (only pseudo-code polynomial). Since NP-complete, no polynomial-time algorithm can be found.
+
+Algorithms that depend on the values in a pseudo-polynomial way can often be used to design polynomial-time approximation schemes. This uses the dynamic programming with running time $O(n^2 v*)$ to design PTAS.
 
 \end{document}
