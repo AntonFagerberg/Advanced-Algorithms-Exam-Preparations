@@ -291,4 +291,67 @@ In the special case where $v_i = w_i$, there is a dynamic programming algorithm 
 
 Algorithms that depend on the values in a pseudo-polynomial way can often be used to design polynomial-time approximation schemes. This uses the dynamic programming with running time $O(n^2 v*)$ to design PTAS.
 
+If the values are small integers, then $v*$ is small and the problem can be solved in polynomial time already. On the other hand, if the values are large, we do not have to deal with them exactly since we only want an approximate solution. 
+
+\begin{mdframed}
+    Define a rounding parameter $b$ and consider the values rounded to an integer multiple of $b$. Use the dynamic programming algorithm to solve the problem with the rounded values, for each item $i$, let its rounded value $\tilde{v_i} = \lceil \frac{v_i}{b} \rceil b$. (Note that the rounded and the original value are quite close to each other).
+\end{mdframed}
+
+\begin{mdframed}
+    \textbf{(11.34)} For each item $i$ we have $v_i \le \tilde{v_i} \le \title{v_i} + b$.
+\end{mdframed}
+
+The gain of this rounding is that all values are multiples of a common value $b$. So, instead of solving the problem with the rounded values $\tilde{v_i}$, we can change the units by dividing allt values by b and get an equivalent problem.
+
+\begin{mdframed}
+    Let $\hat{v_i} = \frac{\tilde{v_i}}{b} = \lceil \frac{v_i}{b} \rceil$ for $i = 1, \ldots, n$.
+\end{mdframed}
+
+\begin{mdframed}
+    \textbf{(11.35)} The Knapsack Problem with values $\tilde{v_i}$ and the scaled problem with values $\hat{v_i}$ have the same set of optimum solutions, the optimum values diff exactly by a factor of $b$, and the scaled values are integral.
+\end{mdframed}
+
+Assume all weights $w_i < W$ or they could be deleted directly anyway. For simplicity, assume $\epsilon^{-1}$ is an integer.
+
+\begin{mdframed}
+    \textbf{Algorithm:} (Knapsack-Approximation)
+
+    Set $b = \frac{\epsilon}{2n} \max_i v_i$
+    
+    Solve the Knapsack Problem with values $\hat{v_i}$
+    
+    Return the set $S$ of items found.
+\end{mdframed}
+
+We have only rounded the values and not the weights.
+
+\begin{mdframed}
+    \textbf{(11.36)} The set of items $S$ returned by the algorithm has total weight at most $W$, that is $\sum_{i \in S} w_i \le W$.
+\end{mdframed}
+
+\begin{mdframed}
+    \textbf{(11.37)} The algorithm Knapsack-Approx runs in polynomial time for any fixed $\epsilon > 0$.
+    
+    \textbf{Proof.} Setting b and rounding all values can be done in polynomial time. The dynamic programming algorithm we use runs in time $O(n^2 v*)$, where $v* = \max_i v_i$. Each item now has weight $w_i$ and value $\hat{v_i}$. To determine the running time, we need to determine $\max_i \hat{v_i}$. The item $j$ with maximum value $v_j = \max_i v_i$ also has maximum value in the rounded problem, so $\max_i \hat{v_i} = \hat{v_j} = \lceil \frac{v_j}{b} \rceil = n \epsilon^{-1}$ (see algorithm when defining b). Hence, the overall running time of the algorithm is $O(n^3 \epsilon^{-1})$. This is polynomial time for any fixed $\epsilon > 0$ as claimed, but the dependence on the desired precision $\epsilon$ is not polynomial, as the running time includes $\epsilon^{-1}$ rather than $\log \epsilon^{-1}$.
+\end{mdframed}
+
+\begin{mdframed}
+    \textbf{(11.38)} If $S$ is the solution found by the Knapsack-Approximation algoritm, and $S*$ is any other solution satisfying $\sum_{i \in S} w_i \le W$, then we have $(1 + \epsilon) \sum_{i \in S} v_i \ge \sum_{i \in S*} v_i$.
+    
+    \textbf{Proof.} Let $S*$ be any set satisfying $\sum_{i \in S*} w_i \le W$. Our algorithm finds the optimal solution with values $\tilde{v_i}$, so we know that
+    
+    $\sum_{i \in S} \tilde{v_i} \ge \sum_{i \in S*} \tilde{v_i}$.
+    
+    The rounded values $\tilde{v_i}$ and the real values $v_i$ are quite close by (11.34), so we get the following chain of inequalitites.
+    
+    $\sum_{i \in S*} v_i \le \sum_{i \in S*} \tilde{v_i} \le \sum_{i \in S} \tilde{v_i} \le \sum_{i \in S} (v_i + b) \le nb + \sum_{i \in S} v_i $
+    
+    showing that the value $\sum_{i \in S} v_i$ of the solution we obtain is at most $nb$ smaller than the maximum value possible. We want to obtain a relative error showing that the value obtained, $\sum_{i \in S} v_i$, is at most $(1 + \epsilon)$ factor less than the maximum possible, so we need to compare nb to the value $\sum_{i \in S} v_i$.
+    Let $j$ be the item with the largest value. By the choise of $b$, we have $v_j = 2\epsilon^{-1}nb$ and $v_j = \tilde{v_j}$. Since each item alone fits the knapsack, we have $\sum_{i \in S} \tilde{v_i} \ge \tilde{v_j} = 2\epsilon^{-1}nb$. Finally, the chain of inequalities above says $\sum_{i \in S} v_i \ge \sum_{i \in S} \tilde{v_i} - nb$, and thus $\sum_{i \in S} v_i \ge (2\epsilon^{-1} - 1)nb$. Hence $nb \le \epsilon \sum_{i \in S} v_i$ for $\epsilon \le 1$ and so
+    
+    $\sum_{i \in S*} v_i \le \sum_{i \in S} v_i + nb \le (1 + \epsilon) \sum_{i \in S} v_i$.
+\end{mdframed}
+
+For entire algorithm code, see p. 648.
+
 \end{document}
