@@ -336,13 +336,13 @@ We have only rounded the values and not the weights.
 \end{mdframed}
 
 \begin{mdframed}
-    \textbf{(11.38)} If $S$ is the solution found by the Knapsack-Approximation algoritm, and $S*$ is any other solution satisfying $\sum_{i \in S} w_i \le W$, then we have $(1 + \epsilon) \sum_{i \in S} v_i \ge \sum_{i \in S*} v_i$.
+    \textbf{(11.38)} If $S$ is the solution found by the Knapsack-Approximation algorithm, and $S*$ is any other solution satisfying $\sum_{i \in S} w_i \le W$, then we have $(1 + \epsilon) \sum_{i \in S} v_i \ge \sum_{i \in S*} v_i$.
     
     \textbf{Proof.} Let $S*$ be any set satisfying $\sum_{i \in S*} w_i \le W$. Our algorithm finds the optimal solution with values $\tilde{v_i}$, so we know that
     
     $\sum_{i \in S} \tilde{v_i} \ge \sum_{i \in S*} \tilde{v_i}$.
     
-    The rounded values $\tilde{v_i}$ and the real values $v_i$ are quite close by (11.34), so we get the following chain of inequalitites.
+    The rounded values $\tilde{v_i}$ and the real values $v_i$ are quite close by (11.34), so we get the following chain of inequalities.
     
     $\sum_{i \in S*} v_i \le \sum_{i \in S*} \tilde{v_i} \le \sum_{i \in S} \tilde{v_i} \le \sum_{i \in S} (v_i + b) \le nb + \sum_{i \in S} v_i $
     
@@ -353,5 +353,52 @@ We have only rounded the values and not the weights.
 \end{mdframed}
 
 For entire algorithm code, see p. 648.
+
+\section{MAX 3-SAT Random Approximation}
+
+Given a set of clauses $C_1, \ldots, C_k$, each of length 3, over a set of variables $X = {x_1, \ldots, x_n}$, does there exist a satisfying truth assignment?
+
+\begin{mdframed}
+    $(x_1 \lor x_2 \lor \overline{x_4}) \land (x_1 \lor \overline{x_2} \lor x_4) \land \ldots$
+\end{mdframed}
+
+
+\textbf{Maximum 3-Satisfiability problem, MAX 3-SAT}, find a truth assignment that satisfies as many clauses as possible. This is NP hard since it's NP hard to decide whether the maximum number of simultaneously satisfiable classes is equal to $k$.
+
+Suppose we set each variable $x_1, \ldots, x_n$ independently to 0 or 1 with probability $\frac{1}{2}$. Let $Z$ denote the random variable equal to the number of satisfied clauses. If we decompose $Z$ into a sum of random variables that each take the value 0 or 1; specifically, let $Z_i = 1$ if the clause $C_i$ is satisfied, and 0 otherwise. Thus $Z = Z_1 + Z_2 + \ldots + Z_k$. Now $E[Z_i]$ is equal to the probability that $C_i$ is satisfied, which can be easily computed. In order for $C_i$ to not be satisfied, each of its three variables must be assigned the value that fails to make it true. Since the variables are set independently, the probability of this is $(\frac{1}{2})^3 = \frac{1}{8}$. Thus clause $C_i$ is satisfied with probability $ 1 - \frac{1}{8} = \frac{7}{8}$, and so $E[Z_i] = \frac{7}{8}$. Using linearity of expectation, w see that the expected number of satisfied clauses is $E[Z] = E[Z_1] + E[Z_2] + \ldots + E[Z_k] = \frac{7}{8}k$. Since no assignment can satisfy more than $k$ clauses, we have the following guarantee.
+
+\begin{mdframed}
+    \textbf{(13.14)} Consider a 3-SAT formula where each clause has three different variables. The expected number of clauses satisfied by a random assignment is within an approximation factor $\frac{7}{8}$ of optimal.
+\end{mdframed}
+
+\begin{mdframed}
+    \textbf{(13.15)} For every instance of 3-SAT, there is a truth assigment that satisfies at least a $\frac{7}{8}$ fraction of all clauses.
+\end{mdframed}
+
+Every instance of 3-SAT with at most seven clauses is satisfiable. If the instance has $k \le 7$ clauses, then (13.15) implies that there is an assignment satisfying at least $\frac{7}{8}k$ of them. But when $7 \le k$, it follows that $\frac{7}{8}k > k - 1$, and since the number of clauses satisfied by this assignment must be an integer, it must be equal to k. In other words, all clauses are satisfied.
+
+If we can show that the probability a random assignment satisfies at least $\frac{7}{8}k$ clauses is at least $p$, then the expected number of trials performed by the algorithm is $\frac{1}{p}$. We want to show that $p$ is at least as large as an inverse polynomial in $n$ and $k$.
+
+For $j = 0, 1, 2, \ldots, k$, let $p_j$ denote the probability that a random assignment satisfies exactly $j$ clauses.  So the expected number of clauses satisfied, by the definition of expectation, is equal to $\sum_{j=0}^{k} jp_j$, and by the previous analysis, this is equal to $\frac{7}{8}k$. We are interested in the quantity $p = \sum_{j \ge \frac{7}{8}k} p_j$. How can this be used as a lower bound?
+
+We start with 
+
+$\frac{7}{8}k = \sum_{j=0}^{k} jp_j = \sum_{j < \frac{7}{8}k} jp_j + \sum_{j \ge \frac{7}{8}k} jp_j$.
+
+Now let $k'$ denote the largest natural number that is strictly smaller than $\frac{7}{8}k$. The right hand side of the above equation only increases if we replace the terms in the first sum by $k'p_j$, and the terms in the second sum by $k_pj$. We also observe that $\sum_{j<\frac{7}{8}k} p_j = 1 - p$, and so
+
+$ \frac{7}{8}k \le \sum_{j<\frac{7}{8}k} k'p_j + \sum_{j \ge \frac{7}{8}k} kp_j = k'(1-p) + kp \le k' + kp $
+
+and hence $kp \ge \frac{7}{8}k - k'$. But $\frac{7}{8}k - k' \ge \frac{1}{8}$, since $k'$ is a natural number strictly smaller than $\frac{7}{8}$ times another natural number, and so 
+
+$p \ge \frac{\frac{7}{8}k - k'}{k} \ge \frac{1}{8k}$.
+
+This was our goal, to get a lower bound on $p$, and so by the waiting time bound (13.7), we see that the expected number of trials needed to find the satisfying assignment we want is at most $8k$.
+
+\begin{mdframed}
+    \textbf{(13.16)} There is a randomised algorithm with polynomial expected running time that is guaranteed to produce a truth assignment satisfying at least a $\frac{7}{8}$ fraction of all clauses.
+\end{mdframed}
+
+\section{Randomized Divide and Conquer: Median-Finding and QuickSort}
 
 \end{document}
