@@ -391,14 +391,175 @@ $ \frac{7}{8}k \le \sum_{j<\frac{7}{8}k} k'p_j + \sum_{j \ge \frac{7}{8}k} kp_j 
 
 and hence $kp \ge \frac{7}{8}k - k'$. But $\frac{7}{8}k - k' \ge \frac{1}{8}$, since $k'$ is a natural number strictly smaller than $\frac{7}{8}$ times another natural number, and so 
 
-$p \ge \frac{\frac{7}{8}k - k'}{k} \ge \frac{1}{8k}$.
-
+\begin{mdframed}
+    $p \ge \frac{\frac{7}{8}k - k'}{k} \ge \frac{1}{8k}$.
+\end{mdframed}
 This was our goal, to get a lower bound on $p$, and so by the waiting time bound (13.7), we see that the expected number of trials needed to find the satisfying assignment we want is at most $8k$.
 
 \begin{mdframed}
     \textbf{(13.16)} There is a randomised algorithm with polynomial expected running time that is guaranteed to produce a truth assignment satisfying at least a $\frac{7}{8}$ fraction of all clauses.
 \end{mdframed}
 
-\section{Randomized Divide and Conquer: Median-Finding and QuickSort}
+\section{Randomized Divide and Conquer}
+
+\subsection{Finding the Median}
+
+Given a set of $n$ numbers $S = \{a_1, a_2, \ldots, a_n\}$. Their median is the number that would be in the middle position if we were to sort them. To account for the case when $n$ is even, we define the median of $S$ as the $k^{th}$ largest elements in $S$ where $k = \frac{n + 1}{2}$, if $n$ is off and $k = \frac{n}{2}$ if $n$ is even. For simplicity, we assume that all the numbers are distinct. (Without this assumption, the problem becomes notationally more complicated, but no new ideas are brought into play).
+
+The median can be computed in time $O(n log(n))$ if we sort the numbers first, but is sorting really necessary? A randomised approach, based on divide-and-conquer, yields an expected running time of $O(n)$.
+
+Given a set of $n$ numbers $S$ and a number $k$ between $1$ and $n$, consider the function $Select(S,k)$ that returns the $k^{th}$ largest element in $S$. As special cases, $Select$ includes the problem of finding the median of $S$ via $Select(S, \frac{n}{2})$, or $Select(S, \frac{n+1}{2})$. It also includes the easier problems of finding the minimum $Select(S, 1)$, and the maximum $Select(S, n)$.
+
+\textbf{Goal:} Design an algorithm that implements $Select$ so that it runs in expected time $O(n)$.
+
+We choose an element $a_i \in S$, the "splitter", and form the sets $S^- = \{a_j : a_j < a_i\}$ and $S^+ = \{a_j : a_j > a_i\}$. We can then determine which of $S^-$ or $S^+$ contains the $k^{th}$ largest element and iterate only on this one.
+
+\begin{mdframed}
+    \textbf{Algorithm:} Select(S,k)
+    
+    Choose a splitter $a_i \in S$
+    
+    For each element $a_j$ of $S$
+    
+    \hspace{2ex} Put $a_j$ in $S^-$ if $a_j < a_i$
+    
+    \hspace{2ex} Put $a_j$ in $S^+$ if $a_j > a_i$
+    
+    Endfor
+    
+    If $|S^-| = k - 1$ then
+
+    \hspace{2ex} The splitter $a_i$ was in fact the desired answer
+
+    Else if $|S^-| \ge k$ then
+
+    \hspace{2ex} The $k^{th}$ largest element lies in $S^-$.
+    
+    \hspace{2ex} Recursively call $Select(S^-, k)$
+    
+    Else (suppose $|S^-| = l < k - 1$
+    
+    \hspace{2ex} The $k^{th}$ largest element lies in $S^+$
+    
+    \hspace{2ex} Recursively call $Select(S^+, k - 1 - l)$
+    
+    Endif
+\end{mdframed}
+
+Since the algorithm is called recursively on a strictly smaller set, it must terminate. If $|S| = 1$, then we must have $k = 1$, and the single element in $S$ will be returned.
+
+\begin{mdframed}
+    \textbf{(13.17)} Regardless of how the splitter is chosen, the algorithm above returns the $k^{th}$ largest element of $S$.
+\end{mdframed}
+
+It is important that the splitter significantly reduce the size of the set being considered, so that we don't keep making passes through large sets of numbers many times. A good choice of splitter should produce sets $S^-$ and $S^+$ that are approximately equal in size.
+
+If we choose the median as the splitter and let $cn$ be the running for $Select$, not counting for the recursive calls. Then, with medians as the splitters, the running time $T(n)$ would be bounded by the recurrence $T(n) \le T(\frac{n}{2}) + cn$. The recurrence has the solution $T(n) = O(n)$. However, we can't use the median as the splitter since it is the median we want to find.
+
+One can show that any "well-centered" element can serve as a good splitter: If we had a way to choose splitters $a_i$ such that there were at least $\epsilon n$ elements both larger and smaller than $a_i$, for any fixed constant $\epsilon > 0$, then the size of the sets in the recursive call would shrink by a factor of at least $(1 - \epsilon)$ each time. This the running time would be bounded by the recurrence $T(n) \le T((1- \epsilon)n) + cn$. The same argument that showed the recurrence had the solution $T(n) = O(n)$ can be used here. If we unroll this recurrence for any $\epsilon > 0$, we get
+
+$T(n) \le cn + (1- \epsilon)cn + (1- \epsilon)^2cn + \ldots = [1 + (1-\epsilon) + (1 - \epsilon)^2 + \ldots]cn \le \frac{1}{\epsilon}cn$
+
+since we have a convergent geometric series.
+
+The only thing to really beware of is a very "off-centered" splitter. If we always chose the minimum element as the splitter, then we may end up with a set in the recursive call that's only one element smaller than we had before. In this case, the running time $T(n)$ would be bounded by the recurrence $T(n) \le T(n - 1) + cn$.
+
+Unrolling the recurrence we see that there's a problem
+
+$T(n) \le cn + c(n-1) + c(n-2) + \ldots = \frac{cn(n+1)}{2} = \Theta(n^2)$
+
+\begin{mdframed}
+    \textbf{Algorithm modification:}
+    
+    Choose a splitter $a_i \in S$ uniformly at random
+\end{mdframed}
+
+Since a fairly large fraction of the elements are reasonably well-centered, we will be likely to end up with a good splitter simply by choosing an element at random.
+
+We say that the algorithm is in phase $j$ when the size of the set under consideration is at most $n(\frac{3}{4})^{j+1}$. We want to bound the expected time spent by the algorithm in phase $j$.
+
+We say that an element of the set under consideration is \textit{central} if at least a quarter of the elements are smaller than it and at least a quarter of elements are larger than it.
+
+If a central element is chosen as a splitter, then at least a quarter of the set will be thrown away, the set will shrink by a factor of $\frac{3}{4}$ or better, and the current phase will come to an end.
+
+Half of all the elements in the set are central, so the probability that our random choice of splitter produces a central element is $\frac{1}{2}$. Hence, by (13.7), the expected number of iterations before a central element is found is 2, so the expected number of iterations spent in phase $j$, for any $j$, is 2.
+
+Let $X$ be a random variable equal to the number of steps taken by the algorithm. We can write it as the sum $X = X_0 + X_1 + X_2 + \ldots$, where $X_j$ is the expected number of steps spent by the algorithm in phase $j$. When the algorithm is in phase $j$, the set has at most $n(\frac{3}{4})^j$, and so the number of steps required for on iteration in phase $j$ is at most $cn(\frac{3}{4})^j$ for some constant $c$. We have just argued that the expected number of iterations spent in phase $j$ is at most two, and hence we have $E[X_j] \le 2cn(\frac{3}{4})^j$. Thus we can bound the total expected running time using linearity of expectation:
+
+$E[X] = \sum_j E[X_j] \le \sum_j 2cn (\frac{3}{4})^j = ecn \sum_j (\frac{3}{4})^j \le 8cn$
+
+since the sum $\sum_j (\frac{3}{4})^j$ is a geometric series that converges. Thus we have the following desired result:
+
+\begin{mdframed}
+    \textbf{(13.18)} The expected running time of $Select(n,k)$ is $O(n)$.
+\end{mdframed}
+
+\subsection{Quicksort}
+Based on the same principles as above. Choose a splitter for the input set $S$, and separate $S$ into the elements below the splitter value and those above it. The difference is that, rather than looking for the median on just one side, we sort both sides recursively and glue the two pieces together (with the splitter between) to produce the overall output. Also, we need to explicitly include a base case for the recursive code: we only use recursion on the sets of size at least 4.
+
+\begin{mdframed}
+    \textbf{Algorithm:} (Quicksort)
+    
+    If $|S| \le 3$ then
+    
+    \hspace{2ex} Sort $S$
+    
+    \hspace{2ex} Output the sorted list
+    
+    Else
+    
+    \hspace{2ex} Chose a splitter $a_i \in S$ uniformly at random
+    
+    \hspace{2ex} For each element $a_j$ of $S$
+    
+    \hspace{2ex} \hspace{2ex} Put $a_j$ in $S^-$ if $a_j < a_i$
+    
+    \hspace{2ex} \hspace{2ex} Put $_aj$ in $S^+$ if $a_j > a_i$
+    
+    \hspace{2ex} Endfor
+    
+    \hspace{2ex} Recursively call $Quicksort(S^-)$ and $Quicksort(S^+)$
+    
+    \hspace{2ex} Output the sorted set $S^-$, then $a_i$, then the sorted $S^+$
+    
+    Endif
+\end{mdframed}
+
+The worst-case running time for this algorithm is when we always chose the smallest value as the splitter, result in $T(n) = \Theta(n^2)$ as it did with the median finding algorithm.
+
+If the selected splitters are the medians in each iteration, we get the the running time $T(n) \le 2T(\frac{n}{2}) + cn$. The running time in this lucky case is $O(nlog(n))$.
+
+We use the same definition as before of a \textit{central splitter}, which requires that each side contains at least a quarter of the elements (it is enough for the analysis that each side contains at least some fixed constant fraction of the elements, the use of a quarter here is chose for convenience).
+
+\begin{mdframed}
+    \textbf{Algorithm:} (Modified QuickSort)
+    
+    Throw away the splitter if it is not central, that is if $|S^-| < \frac{|S|}{4}$ or $|S^+| < \frac{|S|}{4}$.
+\end{mdframed}
+
+The modified algorithm helps to simplify the analysis. Each iteration of the $While$ loop selects a possible splitter $a_i$ and spends $O(|S|)$ time splitting the set and deciding if $a_i$ is central. As argued earlier, the number of iterations needed to find a central splitter is at most 2.
+
+\begin{mdframed}
+    \textbf{(13.19)} The expected running time of the algorithm on a set $S$, excluding the time spent on recursive calls is $O(|S|)$.
+\end{mdframed}
+
+The subproblem is of type $j$ if the size of the set under consideration is at most $n(\frac{3}{4})^j$ but (not?) greater than $n(\frac{3}{4})^{j+1}$.
+
+By (13.19) the expected time spent on a subproblem of type $j$, excluding recursive calls is, $O(n(\frac{3}{4})^j)$. To bound the overall running time, we need to bound the number of subproblems for each type $j$. Splitting a type $j$ subproblem via a central splitter creates two subproblems of higher type. So the subproblems of a given type $j$ are disjoint. This gives us a bound on the number of subproblems.
+
+\begin{mdframed}
+    \textbf{(13.20)} The number of type j subproblems created by the algorithm is at most $(\frac{3}{4})^{j+1}$.
+\end{mdframed}
+
+There are at most $(\frac{3}{4}^{j+1}$ subproblems of type $j$, and the expected time spent on each is $O(n(\frac{3}{4})^j)$ by (13.19). Thus, by linearity of expectation, the expected time spent on subproblems of type $j$ is $O(n)$. The number of different type is bounded by $\log_{\frac{3}{4}}n = O(log(n))$, which gives the desired bound.
+
+\begin{mdframed}
+    \textbf{(13.21)} The expected running time of $Modified Quicksort$ is $O(nlog(n))$.
+\end{mdframed}
+
+The original $Quicksort$ algorithm also has an expected bound time $O(nlog(n))$, no details are given in the book.
+
+
+
 
 \end{document}
